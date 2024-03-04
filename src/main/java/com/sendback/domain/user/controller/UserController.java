@@ -41,7 +41,7 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    public ApiResponse<UpdateUserInfoResponseDto> updateUserInfo(@UserId Long userId, @RequestBody UpdateUserInfoRequestDto updateUserInfoRequestDto) {
+    public ApiResponse<UpdateUserInfoResponseDto> updateUserInfo(@UserId Long userId, @RequestBody @Valid UpdateUserInfoRequestDto updateUserInfoRequestDto) {
         return ApiResponse.success(userService.updateUserInfo(userId, updateUserInfoRequestDto));
     }
 
