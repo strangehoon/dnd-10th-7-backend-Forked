@@ -3,17 +3,13 @@ package com.sendback.global.config.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sendback.domain.auth.exception.AuthExceptionType;
 import com.sendback.global.exception.response.ExceptionResponse;
-import com.sendback.global.exception.type.UnAuthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 
 @Component
