@@ -67,8 +67,8 @@ public class SecurityConfig {
                         .requestMatchers(PERMITTED_URLS).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class)
+                //.addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
+                //.addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .build();
