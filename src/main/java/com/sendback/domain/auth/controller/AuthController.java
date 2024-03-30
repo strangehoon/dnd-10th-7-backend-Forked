@@ -23,8 +23,6 @@ public class AuthController {
     private final KakaoService kakaoService;
     private final GoogleService googleService;
     private final AuthService authService;
-    @Value("${jwt.refresh-token-expire-time}")
-    private long REFRESH_TOKEN_EXPIRE_TIME;
     private final static String REFRESH_TOKEN = "refreshToken";
 
     @GetMapping("/kakao/callback")

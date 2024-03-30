@@ -26,15 +26,13 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    @Value("${jwt.refresh-token-expire-time}")
-    private long REFRESH_TOKEN_EXPIRE_TIME;
     private final static String REFRESH_TOKEN = "refreshToken";
 
     @PostMapping("/signup")
     public ApiResponse<TokensResponseDto> signUpUser(@RequestBody @Valid SignUpRequestDto signUpRequestDto, HttpServletResponse response) {
         Token tokens = userService.signUpUser(signUpRequestDto);
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
-                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .maxAge(60*60*24*7)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
