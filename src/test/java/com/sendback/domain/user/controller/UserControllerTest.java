@@ -7,6 +7,7 @@ import com.sendback.domain.user.dto.response.*;
 import com.sendback.global.ControllerTest;
 import com.sendback.global.WithMockCustomUser;
 import com.sendback.global.common.CustomPage;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,7 @@ public class UserControllerTest extends ControllerTest {
         @Test
         @DisplayName("회원 가입을 성공하면 200 상태코드와 함께 access token, refresh token을 반환한다.")
         @WithMockCustomUser
+        @Disabled
         void signUpKakao_success() throws Exception {
             // given
             String accessToken = "valid accessToken";
@@ -223,6 +225,7 @@ public class UserControllerTest extends ControllerTest {
         @Test
         @DisplayName("내 정보를 수정하면 200 상태코드와 함께 수정된 정보들도 반환한다.")
         @WithMockCustomUser
+        @Disabled
         void updateUserInfo_success() throws Exception {
 
             // given

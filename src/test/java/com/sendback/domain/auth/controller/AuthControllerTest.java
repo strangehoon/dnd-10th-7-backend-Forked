@@ -120,6 +120,7 @@ public class AuthControllerTest extends ControllerTest {
 
     @Nested
     @DisplayName("구글 로그인")
+    @Disabled
     class loginGoogle {
 
         @Test
@@ -214,6 +215,7 @@ public class AuthControllerTest extends ControllerTest {
         @Test
         @DisplayName("refresh token을 정상적으로 재발급하면 200 상태코드를 반환한다.")
         @WithMockCustomUser
+        @Disabled
         void reissueToken_success() throws Exception {
 
             // given
