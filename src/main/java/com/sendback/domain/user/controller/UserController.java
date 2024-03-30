@@ -1,5 +1,6 @@
 package com.sendback.domain.user.controller;
 
+import com.sendback.domain.auth.dto.response.TokensResponseDto;
 import com.sendback.domain.user.dto.request.SignUpRequestDto;
 import com.sendback.domain.user.dto.request.UpdateUserInfoRequestDto;
 import com.sendback.domain.user.dto.response.*;
@@ -7,7 +8,10 @@ import com.sendback.domain.user.service.UserService;
 import com.sendback.global.common.ApiResponse;
 import com.sendback.global.common.CustomPage;
 import com.sendback.global.common.UserId;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,11 +26,23 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    @Value("${jwt.refresh-token-expire-time}")
+    private long REFRESH_TOKEN_EXPIRE_TIME;
+    private final static String REFRESH_TOKEN = "refreshToken";
 
     @PostMapping("/signup")
-    public ApiResponse<Token> signUpUser(@RequestBody @Valid SignUpRequestDto signUpRequestDto) {
+    public ApiResponse<TokensResponseDto> signUpUser(@RequestBody @Valid SignUpRequestDto signUpRequestDto, HttpServletResponse response) {
         Token tokens = userService.signUpUser(signUpRequestDto);
-        return ApiResponse.success(tokens);
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
+                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .path("/")
+                .secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
+        response.setHeader("set-cookie", cookie.toString());
+        System.out.println(tokens.refreshToken());
+        return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
     @GetMapping("/check")

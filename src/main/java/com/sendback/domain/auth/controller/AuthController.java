@@ -9,7 +9,10 @@ import com.sendback.domain.auth.service.GoogleService;
 import com.sendback.domain.auth.service.KakaoService;
 import com.sendback.global.common.ApiResponse;
 import com.sendback.global.common.UserId;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,23 +23,50 @@ public class AuthController {
     private final KakaoService kakaoService;
     private final GoogleService googleService;
     private final AuthService authService;
+    @Value("${jwt.refresh-token-expire-time}")
+    private long REFRESH_TOKEN_EXPIRE_TIME;
+    private final static String REFRESH_TOKEN = "refreshToken";
 
     @GetMapping("/kakao/callback")
-    public ApiResponse<TokensResponseDto> loginKakao(@RequestParam String code) throws JsonProcessingException {
-        TokensResponseDto tokens = kakaoService.loginKakao(code);
-        return ApiResponse.success(tokens);
+    public ApiResponse<TokensResponseDto> loginKakao(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
+        Token tokens = kakaoService.loginKakao(code);
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
+                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .path("/")
+                .secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
+        response.setHeader("set-cookie", cookie.toString());
+        return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
     @GetMapping("/google/callback")
-    public ApiResponse<TokensResponseDto> loginGoogle(@RequestParam String code) throws JsonProcessingException {
-        TokensResponseDto tokens = googleService.loginGoogle(code);
-        return ApiResponse.success(tokens);
+    public ApiResponse<TokensResponseDto> loginGoogle(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
+        Token tokens = googleService.loginGoogle(code);
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
+                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .path("/")
+                .secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
+        response.setHeader("set-cookie", cookie.toString());
+        return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
     @PostMapping("/reissue")
-    public ApiResponse<TokensResponseDto> reissueToken(@RequestBody RefreshTokenRequestDto refreshTokenDto){
+    public ApiResponse<TokensResponseDto> reissueToken(@RequestBody RefreshTokenRequestDto refreshTokenDto, HttpServletResponse response){
         Token tokens = authService.reissueToken(refreshTokenDto.refreshToken());
-        return ApiResponse.success(new TokensResponseDto(tokens.accessToken(), tokens.refreshToken()));
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
+                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .path("/")
+                .secure(true)
+                .sameSite("None")
+                .httpOnly(true)
+                .build();
+        response.setHeader("set-cookie", cookie.toString());
+        return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
     @PostMapping("/logout")
