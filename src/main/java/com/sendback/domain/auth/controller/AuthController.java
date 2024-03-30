@@ -31,7 +31,7 @@ public class AuthController {
     public ApiResponse<TokensResponseDto> loginKakao(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         Token tokens = kakaoService.loginKakao(code);
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
-                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .maxAge(60*60*24*7)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
@@ -45,7 +45,7 @@ public class AuthController {
     public ApiResponse<TokensResponseDto> loginGoogle(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         Token tokens = googleService.loginGoogle(code);
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
-                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .maxAge(60*60*24*7)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
@@ -59,7 +59,7 @@ public class AuthController {
     public ApiResponse<TokensResponseDto> reissueToken(@RequestBody RefreshTokenRequestDto refreshTokenDto, HttpServletResponse response){
         Token tokens = authService.reissueToken(refreshTokenDto.refreshToken());
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
-                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
+                .maxAge(60*60*24*7)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
