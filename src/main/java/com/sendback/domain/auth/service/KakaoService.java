@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sendback.domain.auth.dto.SocialUserInfo;
 import com.sendback.domain.auth.dto.Token;
 import com.sendback.domain.auth.dto.response.SignTokenResponseDto;
-import com.sendback.domain.auth.dto.response.TokensResponseDto;
 import com.sendback.domain.user.entity.User;
 import com.sendback.domain.user.repository.UserRepository;
 import com.sendback.global.config.jwt.JwtProvider;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
 import static com.sendback.domain.auth.exception.AuthExceptionType.NEED_TO_SIGNUP;
 
 @Service
@@ -44,7 +42,7 @@ public class KakaoService {
     private final RestTemplate rt;
 
     @Transactional
-    public TokensResponseDto loginKakao(String code) throws JsonProcessingException {
+    public Token loginKakao(String code) throws JsonProcessingException {
         String accessToken = getAccessToken(code);
         SocialUserInfo kakaoUserInfo = getKakaoUserInfo(accessToken);
 
@@ -56,7 +54,7 @@ public class KakaoService {
         }
 
         Token token =  jwtProvider.issueToken(kakaoUser.getId());
-        return new TokensResponseDto(token.accessToken(), token.refreshToken());
+        return token;
     }
 
     private String getAccessToken(String code) throws JsonProcessingException {

@@ -4,8 +4,7 @@ import com.sendback.domain.auth.dto.SocialUserInfo;
 import com.sendback.domain.auth.dto.Token;
 import com.sendback.domain.user.dto.SigningUser;
 import com.sendback.global.config.redis.RedisService;
-import com.sendback.global.exception.type.SignInException;
-import com.sendback.global.exception.type.UnAuthorizedException;
+import com.sendback.global.exception.type.TokenException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +17,7 @@ import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
 import static com.sendback.domain.auth.exception.AuthExceptionType.*;
+import static com.sendback.domain.user.exception.UserExceptionType.EXPIRED_SIGN_TOKEN;
 import static com.sendback.domain.user.exception.UserExceptionType.INVALID_SIGN_TOKEN;
 
 @Getter
@@ -41,7 +41,6 @@ public class JwtProvider {
 
     public String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION);
-
         if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER)){
             return bearerToken.substring(7);
         }
@@ -54,7 +53,6 @@ public class JwtProvider {
         return token;
     }
 
-    //SignToken 생성
     public String generateSignToken(SocialUserInfo socialUserInfo, String type) {
         Date now = new Date(System.currentTimeMillis());
         final Date expiration = new Date(now.getTime() + SIGN_TOKEN_EXPIRE_TIME);
@@ -73,7 +71,7 @@ public class JwtProvider {
 
 
     private String generateToken(Long userId, boolean isAccessToken) {
-        final Date now = new Date();
+        Date now = new Date(System.currentTimeMillis());
         final Date expiration = new Date(now.getTime() + (isAccessToken ? ACCESS_TOKEN_EXPIRE_TIME : REFRESH_TOKEN_EXPIRE_TIME));
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
@@ -102,36 +100,20 @@ public class JwtProvider {
     public void validateSignToken(String signToken){
         try {
             getJwtParser().parseClaimsJws(signToken);
-        } catch (Exception e) {
-            throw new SignInException(INVALID_SIGN_TOKEN);
+        } catch (ExpiredJwtException e) {
+            throw new TokenException(EXPIRED_SIGN_TOKEN);
+        } catch (Exception e){
+            throw new TokenException(INVALID_SIGN_TOKEN);
         }
     }
 
-    public boolean validateAccessToken(String accessToken) {
+    public void validateAccessToken(String accessToken) {
         try {
             getJwtParser().parseClaimsJws(accessToken);
-            return true;
         } catch (ExpiredJwtException e) {
-            throw new UnAuthorizedException(EXPIRED_ACCESS_TOKEN);
+            throw new TokenException(EXPIRED_ACCESS_TOKEN);
         } catch (Exception e) {
-            throw new UnAuthorizedException(INVALID_ACCESS_TOKEN_VALUE);
-        }
-    }
-
-    public boolean validateRefreshToken(String refreshToken) {
-        try {
-            getJwtParser().parseClaimsJws(refreshToken);
-            return true;
-        } catch (ExpiredJwtException e) {
-            throw new UnAuthorizedException(EXPIRED_REFRESH_TOKEN);
-        } catch (Exception e) {
-            throw new UnAuthorizedException(INVALID_REFRESH_TOKEN_VALUE);
-        }
-    }
-
-    public void equalsRefreshToken(Long userId, String refreshToken) {
-        if (!redisService.validateRefreshToken(userId, refreshToken)) {
-            throw new UnAuthorizedException(NOT_MATCH_REFRESH_TOKEN);
+            throw new TokenException(INVALID_ACCESS_TOKEN_VALUE);
         }
     }
 
@@ -157,8 +139,12 @@ public class JwtProvider {
             Claims claims = getJwtParser().parseClaimsJws(token).getBody();
             return Long.parseLong(claims.getSubject());
         }
-        catch (Exception ex) {
-            throw new UnAuthorizedException(INVALID_REFRESH_TOKEN_VALUE);
+        catch (ExpiredJwtException e) {
+            throw new TokenException(EXPIRED_REFRESH_TOKEN);
         }
+        catch (Exception ex) {
+            throw new TokenException(INVALID_REFRESH_TOKEN_VALUE);
+        }
+
     }
 }
