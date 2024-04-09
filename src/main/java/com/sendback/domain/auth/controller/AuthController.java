@@ -24,12 +24,14 @@ public class AuthController {
     private final GoogleService googleService;
     private final AuthService authService;
     private final static String REFRESH_TOKEN = "refreshToken";
+    @Value("${jwt.refresh-token-expire-time}")
+    private long REFRESH_TOKEN_EXPIRE_TIME;
 
     @GetMapping("/kakao/callback")
     public ApiResponse<TokensResponseDto> loginKakao(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         Token tokens = kakaoService.loginKakao(code);
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
-                .maxAge(60*60*24*7)
+                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
@@ -43,7 +45,7 @@ public class AuthController {
     public ApiResponse<TokensResponseDto> loginGoogle(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         Token tokens = googleService.loginGoogle(code);
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
-                .maxAge(60*60*24*7)
+                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
@@ -57,7 +59,7 @@ public class AuthController {
     public ApiResponse<TokensResponseDto> reissueToken(@RequestBody RefreshTokenRequestDto refreshTokenDto, HttpServletResponse response){
         Token tokens = authService.reissueToken(refreshTokenDto.refreshToken());
         ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN, tokens.refreshToken())
-                .maxAge(60*60*24*7)
+                .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .path("/")
                 .secure(true)
                 .sameSite("None")
