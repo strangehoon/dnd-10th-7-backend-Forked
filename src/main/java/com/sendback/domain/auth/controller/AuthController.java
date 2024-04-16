@@ -53,7 +53,7 @@ public class AuthController {
                 .sameSite("None")
                 .httpOnly(true)
                 .build();
-        response.setHeader(COOKIE_NAME, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 

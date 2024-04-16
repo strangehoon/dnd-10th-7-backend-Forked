@@ -3,11 +3,10 @@ package com.sendback.domain.auth.controller;
 import com.sendback.domain.auth.dto.Token;
 import com.sendback.domain.auth.dto.request.RefreshTokenRequestDto;
 import com.sendback.domain.auth.dto.response.SignTokenResponseDto;
-import com.sendback.domain.auth.dto.response.TokensResponseDto;
 import com.sendback.global.ControllerTest;
 import com.sendback.global.WithMockCustomUser;
+import static org.hamcrest.Matchers.containsString;
 import com.sendback.global.exception.type.SignInException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,10 +14,11 @@ import static com.sendback.domain.auth.exception.AuthExceptionType.NEED_TO_SIGNU
 import static org.mockito.BDDMockito.given;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.headers.HeaderDocumentation;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
-
 import static org.mockito.Mockito.verify;
+import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
@@ -26,39 +26,41 @@ import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class AuthControllerTest extends ControllerTest {
 
 
     @Nested
-    @DisplayName("카카오 로그인")
+    @DisplayName("카카오 로그인 api")
     class loginKakao {
 
         @Test
         @DisplayName("카카오 로그인을 성공하면(기존 회원) 200 상태코드와 함께 access token, refresh token을 반환한다.")
         @WithMockCustomUser
-        @Disabled
         void loginKakao_success() throws Exception {
+
 
             // given
             String code = "valid code";
-            String accessToken = "valid accessToken";
-            String refreshToken = "valid refreshToken";
+            String accessToken = "validAccessToken";
+            String refreshToken = "validRefreshToken";
             given(kakaoService.loginKakao(code)).willReturn(
                     new Token(accessToken, refreshToken)
             );
 
-            // when &then
-            mockMvc.perform(
-                            get("/api/auth/kakao/callback").param("code", code))
+            // when
+            ResultActions resultActions = mockMvc.perform(
+                            get("/api/auth/kakao/callback")
+                                    .param("code", code))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value("200"))
                     .andExpect(jsonPath("$.message").value("성공"))
                     .andExpect(jsonPath("$.data.accessToken").value(accessToken))
-                    .andExpect(jsonPath("$.data.refreshToken").value(refreshToken))
-                    .andDo(document("login-kakao-success",
+                    .andExpect(header().string("Set-Cookie", containsString("refreshToken="+refreshToken)));
+
+            // then
+            resultActions.andDo(document("login-kakao-success",
                             customRequestPreprocessor(),
                             preprocessResponse(prettyPrint()),
                             queryParameters(
@@ -71,11 +73,13 @@ public class AuthControllerTest extends ControllerTest {
                                             .description("응답 데이터"),
                                     fieldWithPath("data.accessToken").type(JsonFieldType.STRING)
                                             .description("access 토큰"),
-                                    fieldWithPath("data.refreshToken").type(JsonFieldType.STRING)
-                                            .description("refresh 토큰"),
                                     fieldWithPath("message").type(JsonFieldType.STRING)
                                             .description("메시지")
-                            )));
+                            ),
+                            responseHeaders(HeaderDocumentation.headerWithName(HttpHeaders.SET_COOKIE)
+                                    .description("refreshToken"))
+
+                    ));
 
             verify(kakaoService).loginKakao(code);
         }
@@ -90,14 +94,16 @@ public class AuthControllerTest extends ControllerTest {
             given(kakaoService.loginKakao(code))
                     .willThrow(new SignInException(NEED_TO_SIGNUP, new SignTokenResponseDto("test_sign_token")));
 
-            // when &then
-            mockMvc.perform(
+            // when
+            ResultActions resultActions = mockMvc.perform(
                             get("/api/auth/kakao/callback").param("code", code))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("1080"))
                     .andExpect(jsonPath("$.message").value("추가 정보를 입력하세요."))
-                    .andExpect(jsonPath("$.data.signToken").value("test_sign_token"))
-                    .andDo(document("login-kakao-failure",
+                    .andExpect(jsonPath("$.data.signToken").value("test_sign_token"));
+
+            // then
+            resultActions.andDo(document("login-kakao-failure",
                             customRequestPreprocessor(),
                             preprocessResponse(prettyPrint()),
                             queryParameters(
@@ -120,7 +126,6 @@ public class AuthControllerTest extends ControllerTest {
 
     @Nested
     @DisplayName("구글 로그인")
-    @Disabled
     class loginGoogle {
 
         @Test
@@ -129,23 +134,24 @@ public class AuthControllerTest extends ControllerTest {
         void loginGoogle_success() throws Exception {
 
             // given
-            String code = "123456";
-            String accessToken = "abcdefg";
-            String refreshToken = "qwerstu";
+            String code = "valid code";
+            String accessToken = "validAccessToken";
+            String refreshToken = "validRefreshToken";
             given(googleService.loginGoogle(code)).willReturn(
                     new Token(accessToken, refreshToken)
             );
 
-            // when &then
-            mockMvc.perform(
+            // when
+            ResultActions resultActions = mockMvc.perform(
                             get("/api/auth/google/callback").param("code", code))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value("200"))
                     .andExpect(jsonPath("$.message").value("성공"))
                     .andExpect(jsonPath("$.data.accessToken").value(accessToken))
-                    .andExpect(jsonPath("$.data.refreshToken").value(refreshToken))
-                    .andDo(print())
-                    .andDo(document("login-google-success",
+                    .andExpect(header().string("Set-Cookie", containsString("refreshToken="+refreshToken)));
+
+            // then
+            resultActions.andDo(document("login-google-success",
                             customRequestPreprocessor(),
                             preprocessResponse(prettyPrint()),
                             queryParameters(
@@ -158,13 +164,12 @@ public class AuthControllerTest extends ControllerTest {
                                             .description("응답 데이터"),
                                     fieldWithPath("data.accessToken").type(JsonFieldType.STRING)
                                             .description("access 토큰"),
-                                    fieldWithPath("data.refreshToken").type(JsonFieldType.STRING)
-                                            .description("refresh 토큰"),
                                     fieldWithPath("message").type(JsonFieldType.STRING)
                                             .description("메시지")
-                            )));
-
-
+                            ),
+                            responseHeaders(HeaderDocumentation.headerWithName(HttpHeaders.SET_COOKIE)
+                                    .description("refreshToken"))
+                    ));
             verify(googleService).loginGoogle(code);
         }
 
@@ -215,12 +220,11 @@ public class AuthControllerTest extends ControllerTest {
         @Test
         @DisplayName("refresh token을 정상적으로 재발급하면 200 상태코드를 반환한다.")
         @WithMockCustomUser
-        @Disabled
         void reissueToken_success() throws Exception {
 
             // given
-            String accessToken = "abcdefg";
-            String refreshToken = "qwerstu";
+            String accessToken = "validAccessToken";
+            String refreshToken = "validRefreshToken";
             RefreshTokenRequestDto refreshTokenRequestDto = new RefreshTokenRequestDto("qwer");
             given(authService.reissueToken(refreshTokenRequestDto.refreshToken())).willReturn(
                     new Token(accessToken, refreshToken)
@@ -236,8 +240,7 @@ public class AuthControllerTest extends ControllerTest {
                     .andExpect(jsonPath("$.code").value("200"))
                     .andExpect(jsonPath("$.message").value("성공"))
                     .andExpect(jsonPath("$.data.accessToken").value(accessToken))
-                    .andExpect(jsonPath("$.data.refreshToken").value(refreshToken))
-                    .andDo(print());
+                    .andExpect(header().string("Set-Cookie", containsString("refreshToken="+refreshToken)));
 
             // then
             resultActions.andDo(document("reissue-token",
@@ -254,11 +257,13 @@ public class AuthControllerTest extends ControllerTest {
                                             .description("응답 데이터"),
                                     fieldWithPath("data.accessToken").type(JsonFieldType.STRING)
                                             .description("access 토큰"),
-                                    fieldWithPath("data.refreshToken").type(JsonFieldType.STRING)
-                                            .description("refresh 토큰"),
+
                                     fieldWithPath("message").type(JsonFieldType.STRING)
                                             .description("메시지")
-                            )));
+                            ),
+                            responseHeaders(HeaderDocumentation.headerWithName(HttpHeaders.SET_COOKIE)
+                                    .description("refreshToken"))
+                    ));
 
             verify(authService).reissueToken(refreshTokenRequestDto.refreshToken());
         }
