@@ -12,6 +12,7 @@ import com.sendback.global.common.UserId;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,8 @@ public class AuthController {
     private final static String REFRESH_TOKEN = "refreshToken";
     @Value("${jwt.refresh-token-expire-time}")
     private long REFRESH_TOKEN_EXPIRE_TIME;
-
+    @Value("${jwt.refresh-token-cookie-name}")
+    private String COOKIE_NAME;
     @GetMapping("/kakao/callback")
     public ApiResponse<TokensResponseDto> loginKakao(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         Token tokens = kakaoService.loginKakao(code);
@@ -37,7 +39,7 @@ public class AuthController {
                 .sameSite("None")
                 .httpOnly(true)
                 .build();
-        response.setHeader("set-cookie", cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
@@ -51,7 +53,7 @@ public class AuthController {
                 .sameSite("None")
                 .httpOnly(true)
                 .build();
-        response.setHeader("set-cookie", cookie.toString());
+        response.setHeader(COOKIE_NAME, cookie.toString());
         return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
@@ -65,7 +67,7 @@ public class AuthController {
                 .sameSite("None")
                 .httpOnly(true)
                 .build();
-        response.setHeader("set-cookie", cookie.toString());
+        response.setHeader(COOKIE_NAME, cookie.toString());
         return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
