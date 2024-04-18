@@ -36,7 +36,7 @@ public class AuthController {
                 .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .path("/")
                 .secure(true)
-                .sameSite("None")
+                .domain(".sendback.co.kr")
                 .httpOnly(true)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -50,7 +50,7 @@ public class AuthController {
                 .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .path("/")
                 .secure(true)
-                .sameSite("None")
+                .domain(".sendback.co.kr")
                 .httpOnly(true)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -64,7 +64,7 @@ public class AuthController {
                 .maxAge(REFRESH_TOKEN_EXPIRE_TIME)
                 .path("/")
                 .secure(true)
-                .sameSite("None")
+                .domain(".sendback.co.kr")
                 .httpOnly(true)
                 .build();
         response.setHeader(COOKIE_NAME, cookie.toString());
