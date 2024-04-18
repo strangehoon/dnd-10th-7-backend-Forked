@@ -65,7 +65,7 @@ public class AuthController {
                 .domain(".sendback.co.kr")
                 .httpOnly(true)
                 .build();
-        response.setHeader(COOKIE_NAME, cookie.toString());
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ApiResponse.success(new TokensResponseDto(tokens.accessToken()));
     }
 
