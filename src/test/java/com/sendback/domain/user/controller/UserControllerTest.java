@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.headers.HeaderDocumentation;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.restdocs.snippet.Attributes;
 import org.springframework.test.web.servlet.ResultActions;
@@ -21,9 +22,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.restdocs.headers.HeaderDocumentation.responseHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
@@ -34,8 +37,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.queryPar
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class UserControllerTest extends ControllerTest {
 
@@ -65,7 +67,7 @@ public class UserControllerTest extends ControllerTest {
                     .andExpect(jsonPath("$.code").value("200"))
                     .andExpect(jsonPath("$.message").value("성공"))
                     .andExpect(jsonPath("$.data.accessToken").value(accessToken))
-                    .andExpect(jsonPath("$.data.refreshToken").value(refreshToken))
+                    .andExpect(header().string("Set-Cookie", containsString("refreshToken="+refreshToken)))
                     .andDo(print());
 
             // then
@@ -93,11 +95,12 @@ public class UserControllerTest extends ControllerTest {
                                     .description("응답 데이터"),
                             fieldWithPath("data.accessToken").type(JsonFieldType.STRING)
                                     .description("access 토큰"),
-                            fieldWithPath("data.refreshToken").type(JsonFieldType.STRING)
-                                    .description("refresh 토큰"),
                             fieldWithPath("message").type(JsonFieldType.STRING)
                                     .description("메시지")
-                    )));
+                    ),
+                    responseHeaders(HeaderDocumentation.headerWithName(HttpHeaders.SET_COOKIE)
+                            .description("refreshToken"))
+            ));
 
             verify(userService).signUpUser(signUpRequestDto);
         }

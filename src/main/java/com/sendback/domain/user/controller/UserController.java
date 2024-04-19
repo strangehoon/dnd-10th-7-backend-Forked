@@ -35,7 +35,7 @@ public class UserController {
                 .maxAge(60*60*24*7)
                 .path("/")
                 .secure(true)
-                .sameSite("None")
+                .domain(".sendback.co.kr")
                 .httpOnly(true)
                 .build();
         response.setHeader("set-cookie", cookie.toString());
