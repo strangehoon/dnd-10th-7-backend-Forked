@@ -34,7 +34,7 @@ public class AuthController {
                 .maxAge(604800)
                 .path("/")
                 .secure(true)
-                .domain(".sendback.co.kr")
+                .sameSite("None")
                 .httpOnly(true)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -48,7 +48,7 @@ public class AuthController {
                 .maxAge(604800)
                 .path("/")
                 .secure(true)
-                .domain(".sendback.co.kr")
+                .sameSite("None")
                 .httpOnly(true)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -62,7 +62,7 @@ public class AuthController {
                 .maxAge(604800)
                 .path("/")
                 .secure(true)
-                .domain(".sendback.co.kr")
+                .sameSite("None")
                 .httpOnly(true)
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
