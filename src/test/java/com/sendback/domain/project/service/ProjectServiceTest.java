@@ -1,6 +1,5 @@
 package com.sendback.domain.project.service;
 
-import com.sendback.domain.field.entity.Field;
 import com.sendback.domain.field.repository.FieldRepository;
 import com.sendback.domain.like.repository.LikeRepository;
 import com.sendback.domain.project.dto.request.SaveProjectRequestDto;
@@ -19,7 +18,6 @@ import com.sendback.domain.scrap.repository.ScrapRepository;
 import com.sendback.domain.user.entity.User;
 import com.sendback.domain.user.service.UserService;
 import com.sendback.global.ServiceTest;
-import com.sendback.global.common.constants.FieldName;
 import com.sendback.global.common.CustomPage;
 import com.sendback.global.config.image.service.ImageService;
 import com.sendback.global.exception.type.BadRequestException;
@@ -38,13 +36,11 @@ import static com.sendback.domain.project.exception.ProjectExceptionType.*;
 import static com.sendback.domain.project.fixture.ProjectFixture.*;
 import static com.sendback.domain.scrap.fixture.ScrapFixture.createDummyScrap;
 import static com.sendback.domain.user.fixture.UserFixture.createDummyUser;
-import static com.sendback.global.common.constants.FieldName.GAME;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-
 
 public class ProjectServiceTest extends ServiceTest {
 
@@ -298,35 +294,19 @@ public class ProjectServiceTest extends ServiceTest {
     class getRecommendedProject {
 
         @Test
-        @Disabled
         @DisplayName("성공하면 200과 함께 추천 프로젝트를 반환한다.")
         void getUserInfo_success() {
             // given
-            Long mock_userId = 1L;
-            List<FieldName> fieldNameList = List.of(GAME); // 수정된 부분
-            List<Field> fieldList = new ArrayList<>();
-            fieldList.add(Field.of(GAME, user));
-
-            List<RecommendedProjectResponseDto> projects = new ArrayList<>();
-            projects.add(MOCK_RECOMMEND_PROJECT_RESPONSE_DTO);
-
-            given(fieldRepository.findAllByUserId(mock_userId)).willReturn(fieldList);
-            //given(projectRepository.findRecommendedProjects(mock_userId, fieldNameList)).willReturn(projects);
+            List<Project> projects = Arrays.asList(project);
+            when(projectRepository.findRecommendedProjects(12)).thenReturn(projects);
 
             // when
-            List<RecommendedProjectResponseDto> result = projectService.getRecommendedProject(mock_userId);
+            List<RecommendedProjectResponseDto> recommendedProjects = projectService.getRecommendedProject();
 
             // then
-            assertThat(projects.get(0).projectId()).isEqualTo(result.get(0).projectId());
-            assertThat(projects.get(0).field()).isEqualTo(result.get(0).field());
-            assertThat(projects.get(0).createdAt()).isEqualTo(result.get(0).createdAt());
-            assertThat(projects.get(0).title()).isEqualTo(result.get(0).title());
-            assertThat(projects.get(0).profileImageUrl()).isEqualTo(result.get(0).profileImageUrl());
-            assertThat(projects.get(0).createdBy()).isEqualTo(result.get(0).createdBy());
-            assertThat(projects.get(0).summary()).isEqualTo(result.get(0).summary());
-            assertThat(projects.get(0).progress()).isEqualTo(result.get(0).progress());
+            assertThat(recommendedProjects).hasSize(1);
+            assertThat(recommendedProjects.get(0).title()).isEqualTo("기획중");
         }
-
     }
 
     @DisplayName("프로젝트 끌올 시")

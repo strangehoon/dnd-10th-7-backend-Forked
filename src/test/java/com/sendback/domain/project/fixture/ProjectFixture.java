@@ -9,11 +9,9 @@ import com.sendback.domain.project.entity.Progress;
 import com.sendback.domain.project.entity.Project;
 import com.sendback.domain.user.entity.User;
 import com.sendback.global.common.constants.FieldName;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import static com.sendback.domain.user.fixture.UserFixture.mock_user;
 
 public class ProjectFixture {

@@ -20,9 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
-
 import static com.sendback.global.common.ApiResponse.success;
 
 @RestController
@@ -96,13 +94,9 @@ public class ProjectController {
 
     @GetMapping("/recommend")
     public ApiResponse<List<RecommendedProjectResponseDto>> getRecommendedProject() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getPrincipal() == "anonymousUser") {
-            return success(projectService.getRecommendedProject(null));
-        }
-        Long userId = (Long) authentication.getPrincipal();
-        return success(projectService.getRecommendedProject(userId));
+        return success(projectService.getRecommendedProject());
     }
+
     @PutMapping("/{projectId}/pull-up")
     public ApiResponse<PullUpProjectResponseDto> pullUpProject(
             @UserId Long userId,

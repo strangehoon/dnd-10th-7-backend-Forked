@@ -5,9 +5,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Component
@@ -15,6 +15,14 @@ import java.util.Date;
 public class RedisService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+
+    public Object getValues(String key) {
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    public void setValues(String key, Object data, long timeout, TimeUnit unit) {
+        redisTemplate.opsForValue().set(key, data, timeout, unit);
+    }
 
     public void put(Long userId, String refreshToken, Date expiredDate) {
         Date now = new Date();
