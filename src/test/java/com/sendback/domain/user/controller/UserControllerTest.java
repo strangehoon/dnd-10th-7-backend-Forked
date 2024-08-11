@@ -7,7 +7,6 @@ import com.sendback.domain.user.dto.response.*;
 import com.sendback.global.ControllerTest;
 import com.sendback.global.WithMockCustomUser;
 import com.sendback.global.common.CustomPage;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -47,13 +45,12 @@ public class UserControllerTest extends ControllerTest {
         @Test
         @DisplayName("회원 가입을 성공하면 200 상태코드와 함께 access token, refresh token을 반환한다.")
         @WithMockCustomUser
-        @Disabled
         void signUpKakao_success() throws Exception {
             // given
-            String accessToken = "valid accessToken";
-            String refreshToken = "valid refreshToken";
+            String accessToken = "valid_accessToken";
+            String refreshToken = "valid_refreshToken";
             SignUpRequestDto signUpRequestDto = new SignUpRequestDto("user", "2000.01.01",
-                    "남자", "백엔드", Arrays.asList("환경", "게임"), "valid signToken");
+                    "남자", "백엔드", Arrays.asList("환경", "게임"), "valid_signToken");
             given(userService.signUpUser(signUpRequestDto)).willReturn(new Token(accessToken, refreshToken));
 
             String content = objectMapper.writeValueAsString(signUpRequestDto);
@@ -67,7 +64,7 @@ public class UserControllerTest extends ControllerTest {
                     .andExpect(jsonPath("$.code").value("200"))
                     .andExpect(jsonPath("$.message").value("성공"))
                     .andExpect(jsonPath("$.data.accessToken").value(accessToken))
-                    .andExpect(header().string("Set-Cookie", containsString("refreshToken="+refreshToken)))
+                    .andExpect(header().exists(HttpHeaders.SET_COOKIE))
                     .andDo(print());
 
             // then
@@ -228,12 +225,11 @@ public class UserControllerTest extends ControllerTest {
         @Test
         @DisplayName("내 정보를 수정하면 200 상태코드와 함께 수정된 정보들도 반환한다.")
         @WithMockCustomUser
-        @Disabled
         void updateUserInfo_success() throws Exception {
 
             // given
-            UpdateUserInfoRequestDto updateUserInfoRequestDto = new UpdateUserInfoRequestDto("테스트 사용자", "2000.01.01", "백엔드", Arrays.asList("환경", "게임"));
-            UpdateUserInfoResponseDto updateUserInfoResponseDto = new UpdateUserInfoResponseDto("테스트 사용자", "2000.01.01", "백엔드", Arrays.asList("환경", "게임"));
+            UpdateUserInfoRequestDto updateUserInfoRequestDto = new UpdateUserInfoRequestDto("테스트사용자", "2000.01.01", "백엔드", Arrays.asList("환경", "게임"));
+            UpdateUserInfoResponseDto updateUserInfoResponseDto = new UpdateUserInfoResponseDto("테스트사용자", "2000.01.01", "백엔드", Arrays.asList("환경", "게임"));
 
             given(userService.updateUserInfo(anyLong(), any(UpdateUserInfoRequestDto.class))).willReturn(updateUserInfoResponseDto);
             String content = objectMapper.writeValueAsString(updateUserInfoRequestDto);

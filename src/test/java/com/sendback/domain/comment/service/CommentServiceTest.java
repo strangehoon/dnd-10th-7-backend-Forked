@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import static com.sendback.domain.comment.exception.CommentExceptionType.NOT_COMMENT_AUTHOR;
-import static com.sendback.domain.comment.persister.CommentFixture.createDummyComment;
+import static com.sendback.domain.comment.fixture.CommentFixture.createDummyComment;
 import static com.sendback.domain.project.fixture.ProjectFixture.createDummyProject;
 import static com.sendback.domain.user.fixture.UserFixture.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;

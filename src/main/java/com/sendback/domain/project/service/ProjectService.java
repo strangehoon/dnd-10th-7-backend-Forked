@@ -1,6 +1,5 @@
 package com.sendback.domain.project.service;
 
-import com.sendback.domain.field.entity.Field;
 import com.sendback.domain.field.repository.FieldRepository;
 import com.sendback.domain.like.repository.LikeRepository;
 import com.sendback.domain.project.dto.request.SaveProjectRequestDto;
@@ -21,16 +20,17 @@ import com.sendback.domain.user.service.UserService;
 import com.sendback.global.common.CustomPage;
 import com.sendback.global.common.constants.FieldName;
 import com.sendback.global.config.image.service.ImageService;
+import com.sendback.global.config.redis.RedisService;
 import com.sendback.global.exception.type.BadRequestException;
 import com.sendback.global.exception.type.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Optional;
@@ -49,6 +49,7 @@ public class ProjectService {
     private final ScrapRepository scrapRepository;
 
     private final FieldRepository fieldRepository;
+    private final RedisService redisService;
 
     public ProjectDetailResponseDto getProjectDetail(Long userId, Long projectId) {
         Project project = getProjectById(projectId);
@@ -115,23 +116,13 @@ public class ProjectService {
         projectRepository.delete(project);
     }
 
-    public List<RecommendedProjectResponseDto> getRecommendedProject(Long userId){
-        List<RecommendedProjectResponseDto> responseDtos = new ArrayList<>();
-        if(userId!=null) {
-            List<Field> fieldList = fieldRepository.findAllByUserId(userId);
-            List<FieldName> fieldNameList = fieldList.stream().map(Field::getName).collect(Collectors.toList());
-            List<Project> projects = projectRepository.findRecommendedProjects(fieldNameList, 12);
-            responseDtos.addAll(projects.stream().map(project -> RecommendedProjectResponseDto.of(project)).collect(Collectors.toList()));
-            if(projects.size()<12) {
-                List<Project> extraProject = projectRepository.findRecommendedProjects(12 - projects.size());
-                responseDtos.addAll(extraProject.stream().map(project -> RecommendedProjectResponseDto.of(project)).collect(Collectors.toList()));
-            }
-        }
-        else{
-            List<Project> projects = projectRepository.findRecommendedProjects(12);
-            responseDtos.addAll(projects.stream().map(project -> RecommendedProjectResponseDto.of(project)).collect(Collectors.toList()));
-        }
-        return responseDtos;
+
+    @Cacheable(value = "recommend", cacheManager = "redisCacheManager")
+    public List<RecommendedProjectResponseDto> getRecommendedProject() {
+        List<Project> projects = projectRepository.findRecommendedProjects(12);
+        return projects.stream()
+                .map(RecommendedProjectResponseDto::of)
+                .collect(Collectors.toList());
     }
 
     public void validateProjectAuthor(User user, Project project) {

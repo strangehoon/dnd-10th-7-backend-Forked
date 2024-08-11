@@ -562,7 +562,7 @@ public class ProjectControllerTest extends ControllerTest {
             List<RecommendedProjectResponseDto> responseDtos = new ArrayList<>();
             responseDtos.add(recommendedProjectResponseDto);
 
-            given(projectService.getRecommendedProject(anyLong())).willReturn(responseDtos);
+            given(projectService.getRecommendedProject()).willReturn(responseDtos);
 
             // when
             ResultActions resultActions = mockMvc.perform(get("/api/projects/recommend")
@@ -607,7 +607,7 @@ public class ProjectControllerTest extends ControllerTest {
                                     fieldWithPath("data[].profileImageUrl").type(JsonFieldType.STRING)
                                             .description("프로필 이미지")
                             )));
-            verify(projectService).getRecommendedProject(anyLong());
+            verify(projectService).getRecommendedProject();
         }
     }
     @Nested
