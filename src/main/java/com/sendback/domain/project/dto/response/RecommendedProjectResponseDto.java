@@ -15,12 +15,8 @@ public record RecommendedProjectResponseDto (
     String title,
     String summary,
     String createdBy,
-
     @JsonFormat(pattern = "yyyy.MM.dd")
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     LocalDateTime createdAt,
-
     String profileImageUrl
 ){
     public static RecommendedProjectResponseDto of(Project project) {

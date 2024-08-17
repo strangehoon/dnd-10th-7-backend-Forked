@@ -20,18 +20,19 @@ import com.sendback.domain.user.service.UserService;
 import com.sendback.global.common.CustomPage;
 import com.sendback.global.common.constants.FieldName;
 import com.sendback.global.config.image.service.ImageService;
-import com.sendback.global.config.redis.RedisService;
 import com.sendback.global.exception.type.BadRequestException;
 import com.sendback.global.exception.type.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Optional;
 import static com.sendback.domain.project.exception.ProjectExceptionType.*;
@@ -47,9 +48,9 @@ public class ProjectService {
     private final ProjectImageRepository projectImageRepository;
     private final LikeRepository likeRepository;
     private final ScrapRepository scrapRepository;
-
     private final FieldRepository fieldRepository;
-    private final RedisService redisService;
+    private final RedisTemplate redisTemplate;
+    private static final String PROJECT_SCORE_KEY = "project:score";
 
     public ProjectDetailResponseDto getProjectDetail(Long userId, Long projectId) {
         Project project = getProjectById(projectId);
@@ -117,9 +118,24 @@ public class ProjectService {
     }
 
 
-    @Cacheable(value = "recommend", cacheManager = "redisCacheManager")
+    @Transactional(readOnly = true)
     public List<RecommendedProjectResponseDto> getRecommendedProject() {
-        List<Project> projects = projectRepository.findRecommendedProjects(12);
+        ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
+        Set<Object> topProjects = zSetOps.reverseRange(PROJECT_SCORE_KEY, 0, 12 - 1);
+
+        if (topProjects == null || topProjects.isEmpty()) {
+            return List.of();
+        }
+
+        // Redis에서 조회한 ID에서 "user_"를 제거하고 숫자로 변환
+        List<Long> projectIds = topProjects.stream()
+                .map(projectKey -> {
+                    String projectIdStr = projectKey.toString().replace("project_", "");
+                    return Long.parseLong(projectIdStr);
+                })
+                .collect(Collectors.toList());
+
+        List<Project> projects = projectRepository.findAllById(projectIds);
         return projects.stream()
                 .map(RecommendedProjectResponseDto::of)
                 .collect(Collectors.toList());

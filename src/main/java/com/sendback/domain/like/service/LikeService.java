@@ -1,44 +1,35 @@
 package com.sendback.domain.like.service;
 
 import com.sendback.domain.like.dto.response.ReactLikeResponseDto;
-import com.sendback.domain.like.entity.Like;
-import com.sendback.domain.like.repository.LikeRepository;
-import com.sendback.domain.project.entity.Project;
-import com.sendback.domain.project.service.ProjectService;
-import com.sendback.domain.user.entity.User;
-import com.sendback.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class LikeService {
 
-    private final UserService userService;
-    private final ProjectService projectService;
-    private final LikeRepository likeRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private static final String LIKE_KEY_PREFIX = "project:like:";
+    private static final String PROJECT_SCORE_KEY = "project:score";
 
     @Transactional
     public ReactLikeResponseDto reactLike(Long userId, Long projectId) {
-        User loginUser = userService.getUserById(userId);
-        Project project = projectService.getProjectById(projectId);
+        String redisKey = LIKE_KEY_PREFIX + projectId;
+        boolean isLiked = redisTemplate.opsForSet().isMember(redisKey, userId);
 
-        Like like = react(loginUser, project);
-
-        return new ReactLikeResponseDto(!like.isDeleted());
-    }
-
-    private Like react(User user, Project project) {
-        Optional<Like> likeOptional = likeRepository.findByUserAndProject(user, project);
-        if (likeOptional.isEmpty()) {
-            Like like = Like.of(user, project);
-            return likeRepository.save(like);
+        String projectKey = "project_" + projectId;
+        if (isLiked) {
+            redisTemplate.opsForSet().remove(redisKey, userId);
+            redisTemplate.opsForZSet().incrementScore(PROJECT_SCORE_KEY, projectKey, -1);
+        } else {
+            redisTemplate.opsForSet().add(redisKey, userId);
+            redisTemplate.opsForZSet().incrementScore(PROJECT_SCORE_KEY, projectKey, 1);
         }
-        return likeOptional.get().react();
+
+        // 변경 후의 상태를 반환합니다.
+        boolean newLikeStatus = !isLiked;
+        return new ReactLikeResponseDto(newLikeStatus);
     }
 }
-
